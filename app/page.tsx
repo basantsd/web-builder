@@ -18,11 +18,27 @@ export default function Home() {
 
   const handleCreateProject = async () => {
     setLoading(true);
-    // TODO: Call API to generate DNA and create project
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`Project "${projectForm.name}" created successfully!\n\nProject ID: ${data.project.id}\nDNA Generated: Yes`);
+        console.log('Project DNA:', data.project.dna);
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to create project. Please check console for details.');
+    } finally {
       setLoading(false);
-      alert('Project DNA generated! (API integration pending)');
-    }, 2000);
+    }
   };
 
   if (step === 'landing') {
