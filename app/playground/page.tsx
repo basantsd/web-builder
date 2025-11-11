@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { templates, getTemplatesByCategory, searchTemplates, applyTemplateVariables } from '@/lib/templates';
 import { CodeTemplate } from '@/types/project';
+import { useUsageStore } from '@/lib/store/usage-store';
 
 export default function PlaygroundPage() {
+  const addRecord = useUsageStore((state) => state.addRecord);
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js' | 'tsx'>('tsx');
   const [code, setCode] = useState({
     html: '<div id="app">\n  <h1>Hello CodeForge AI!</h1>\n  <p>Start building amazing things.</p>\n</div>',
@@ -67,6 +69,17 @@ export default function PlaygroundPage() {
           if (match) generatedCode = match[1];
         }
 
+        // Track usage
+        addRecord({
+          provider: data.provider,
+          model: data.model,
+          taskType: 'code_generation',
+          inputTokens: data.usage.inputTokens,
+          outputTokens: data.usage.outputTokens,
+          cost: data.usage.totalCost,
+          success: true,
+        });
+
         setCode({ ...code, tsx: generatedCode });
         setActiveTab('tsx');
         setShowAIGenerator(false);
@@ -96,6 +109,9 @@ export default function PlaygroundPage() {
             <h2 className="text-lg font-semibold text-gray-700">Playground</h2>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard'}>
+              📊 Dashboard
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setShowTemplates(!showTemplates)}>
               📚 Templates
             </Button>

@@ -52,8 +52,8 @@ export default function Home() {
               <h1 className="text-xl font-bold">CodeForge AI</h1>
             </div>
             <nav className="flex items-center gap-4">
-              <Button variant="ghost" size="sm">Features</Button>
-              <Button variant="ghost" size="sm">Pricing</Button>
+              <Button variant="ghost" size="sm" onClick={() => window.location.href = '/playground'}>Playground</Button>
+              <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard'}>Dashboard</Button>
               <Button variant="ghost" size="sm">Docs</Button>
               <Button size="sm">Sign In</Button>
             </nav>
