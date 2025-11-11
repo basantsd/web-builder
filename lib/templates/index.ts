@@ -526,6 +526,684 @@ export function paginatedResponse<T>(
   } as APIResponse<T[]>);
 }`,
   },
+
+  // CRUD Update
+  {
+    id: 'crud-update',
+    name: 'Update Item (CRUD Update)',
+    description: 'API route to update an existing item',
+    category: 'CRUD',
+    language: 'typescript',
+    framework: 'Next.js',
+    tags: ['crud', 'api', 'update', 'database', 'put'],
+    usageCount: 0,
+    variables: ['ModelName', 'modelName'],
+    code: `import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/database/prisma';
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json();
+    const { id } = params;
+
+    const {{modelName}} = await prisma.{{modelName}}.update({
+      where: { id },
+      data: body,
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {{modelName}},
+      message: '{{ModelName}} updated successfully',
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: 'Failed to update {{modelName}}', details: error.message },
+      { status: 500 }
+    );
+  }
+}`,
+    exampleUsage: 'ModelName=Post, modelName=post',
+  },
+
+  // CRUD Delete
+  {
+    id: 'crud-delete',
+    name: 'Delete Item (CRUD Delete)',
+    description: 'API route to delete an item by ID',
+    category: 'CRUD',
+    language: 'typescript',
+    framework: 'Next.js',
+    tags: ['crud', 'api', 'delete', 'database'],
+    usageCount: 0,
+    variables: ['ModelName', 'modelName'],
+    code: `import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/database/prisma';
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+
+    await prisma.{{modelName}}.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: '{{ModelName}} deleted successfully',
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: 'Failed to delete {{modelName}}', details: error.message },
+      { status: 500 }
+    );
+  }
+}`,
+    exampleUsage: 'ModelName=Post, modelName=post',
+  },
+
+  // Signup API
+  {
+    id: 'auth-signup-api',
+    name: 'Signup/Register API Route',
+    description: 'User registration endpoint with password hashing',
+    category: 'AUTH',
+    language: 'typescript',
+    framework: 'Next.js',
+    tags: ['auth', 'signup', 'register', 'api', 'security'],
+    usageCount: 0,
+    variables: [],
+    code: `import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
+import { prisma } from '@/lib/database/prisma';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { name, email, password } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User already exists' },
+        { status: 409 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      message: 'User created successfully',
+    }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: 'Registration failed', details: error.message },
+      { status: 500 }
+    );
+  }
+}`,
+  },
+
+  // useDebounce Hook
+  {
+    id: 'hook-use-debounce',
+    name: 'useDebounce Hook',
+    description: 'React hook to debounce a value for search/input optimization',
+    category: 'HOOK',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['react', 'hook', 'debounce', 'optimization', 'search'],
+    usageCount: 0,
+    variables: [],
+    code: `import { useEffect, useState } from 'react';
+
+export function useDebounce<T>(value: T, delay: number = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Usage example:
+// const searchTerm = 'example';
+// const debouncedSearch = useDebounce(searchTerm, 500);
+//
+// useEffect(() => {
+//   // API call with debouncedSearch
+// }, [debouncedSearch]);`,
+  },
+
+  // useFetch Hook
+  {
+    id: 'hook-use-fetch',
+    name: 'useFetch Hook',
+    description: 'React hook for API calls with loading and error states',
+    category: 'HOOK',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['react', 'hook', 'fetch', 'api', 'loading'],
+    usageCount: 0,
+    variables: [],
+    code: `import { useEffect, useState } from 'react';
+
+interface UseFetchResult<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+export function useFetch<T>(url: string): UseFetchResult<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(\`HTTP error! status: \${response.status}\`);
+      }
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error, refetch: fetchData };
+}`,
+  },
+
+  // Contact Form Component
+  {
+    id: 'form-contact',
+    name: 'Contact Form Component',
+    description: 'Complete contact form with validation and submission',
+    category: 'FORM',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['form', 'contact', 'validation', 'email'],
+    usageCount: 0,
+    variables: [],
+    code: `'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+export function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSuccess(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setError('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <Card className="w-full max-w-2xl">
+        <CardContent className="pt-6 text-center">
+          <div className="text-green-600 text-5xl mb-4">✓</div>
+          <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
+          <p className="text-gray-600">We'll get back to you soon.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle>Contact Us</CardTitle>
+        <CardDescription>Send us a message and we'll respond as soon as possible</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Subject</label>
+            <Input
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Message</label>
+            <textarea
+              className="w-full min-h-[150px] rounded-lg border border-gray-300 p-3 text-sm"
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Sending...' : 'Send Message'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}`,
+  },
+
+  // Card Grid Component
+  {
+    id: 'component-card-grid',
+    name: 'Card Grid Component',
+    description: 'Responsive grid of cards for displaying items',
+    category: 'COMPONENT',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['component', 'grid', 'cards', 'responsive', 'layout'],
+    usageCount: 0,
+    variables: ['ItemType'],
+    code: `'use client';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface {{ItemType}} {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+}
+
+interface CardGridProps {
+  items: {{ItemType}}[];
+  onItemClick?: (item: {{ItemType}}) => void;
+}
+
+export function CardGrid({ items, onItemClick }: CardGridProps) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {items.map((item) => (
+        <Card
+          key={item.id}
+          className="cursor-pointer hover:border-blue-400 transition-colors"
+          onClick={() => onItemClick?.(item)}
+        >
+          {item.image && (
+            <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          <CardHeader>
+            <CardTitle>{item.title}</CardTitle>
+            <CardDescription>{item.description}</CardDescription>
+          </CardHeader>
+        </Card>
+      ))}
+
+      {items.length === 0 && (
+        <div className="col-span-full text-center py-12 text-gray-500">
+          No items to display
+        </div>
+      )}
+    </div>
+  );
+}`,
+    exampleUsage: 'ItemType=Product, Project, BlogPost, etc.',
+  },
+
+  // Protected Route Component
+  {
+    id: 'component-protected-route',
+    name: 'Protected Route Component',
+    description: 'HOC for protecting routes with authentication',
+    category: 'COMPONENT',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['auth', 'protected', 'route', 'hoc', 'security'],
+    usageCount: 0,
+    variables: [],
+    code: `'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsAuthenticated(false);
+          router.push('/login');
+          return;
+        }
+
+        // Verify token with API
+        const response = await fetch('/api/auth/verify', {
+          headers: { Authorization: \`Bearer \${token}\` },
+        });
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          localStorage.removeItem('token');
+          router.push('/login');
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (isAuthenticated === null) {
+    return fallback || (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
+}`,
+  },
+
+  // JWT Middleware
+  {
+    id: 'util-jwt-middleware',
+    name: 'JWT Auth Middleware',
+    description: 'Middleware for verifying JWT tokens in API routes',
+    category: 'UTIL',
+    language: 'typescript',
+    framework: 'Next.js',
+    tags: ['auth', 'jwt', 'middleware', 'security', 'api'],
+    usageCount: 0,
+    variables: [],
+    code: `import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+
+export interface AuthRequest extends NextRequest {
+  user?: {
+    userId: string;
+    email: string;
+  };
+}
+
+export async function authMiddleware(
+  request: NextRequest,
+  handler: (req: AuthRequest) => Promise<NextResponse>
+): Promise<NextResponse> {
+  try {
+    const authHeader = request.headers.get('authorization');
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        userId: string;
+        email: string;
+      };
+
+      // Add user to request
+      (request as AuthRequest).user = decoded;
+
+      return await handler(request as AuthRequest);
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid token' },
+        { status: 401 }
+      );
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// Usage in API route:
+// export async function GET(request: NextRequest) {
+//   return authMiddleware(request, async (req) => {
+//     const userId = req.user?.userId;
+//     // Your authenticated logic here
+//   });
+// }`,
+  },
+
+  // Pagination Component
+  {
+    id: 'component-pagination',
+    name: 'Pagination Component',
+    description: 'Reusable pagination component with page numbers',
+    category: 'COMPONENT',
+    language: 'typescript',
+    framework: 'React',
+    tags: ['pagination', 'component', 'navigation', 'ui'],
+    usageCount: 0,
+    variables: [],
+    code: `'use client';
+
+import { Button } from '@/components/ui/button';
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  maxVisible?: number;
+}
+
+export function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  maxVisible = 5,
+}: PaginationProps) {
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const leftSiblingIndex = Math.max(currentPage - 1, 1);
+      const rightSiblingIndex = Math.min(currentPage + 1, totalPages);
+
+      const shouldShowLeftDots = leftSiblingIndex > 2;
+      const shouldShowRightDots = rightSiblingIndex < totalPages - 1;
+
+      if (!shouldShowLeftDots && shouldShowRightDots) {
+        for (let i = 1; i <= Math.min(maxVisible - 1, totalPages); i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (shouldShowLeftDots && !shouldShowRightDots) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = Math.max(totalPages - maxVisible + 2, 2); i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  const pages = getPageNumbers();
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        Previous
+      </Button>
+
+      {pages.map((page, index) => (
+        <div key={index}>
+          {page === '...' ? (
+            <span className="px-3 py-1 text-gray-400">...</span>
+          ) : (
+            <Button
+              variant={currentPage === page ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onPageChange(page as number)}
+            >
+              {page}
+            </Button>
+          )}
+        </div>
+      ))}
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </Button>
+    </div>
+  );
+}`,
+  },
 ];
 
 // Template search and retrieval
