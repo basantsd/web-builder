@@ -84,7 +84,7 @@ export default function Home() {
               <Button size="lg" onClick={() => setStep('create')}>
                 Start Building Now
               </Button>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" onClick={() => window.location.href = '/playground'}>
                 View Demo
               </Button>
             </div>
